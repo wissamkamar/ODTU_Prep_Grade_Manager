@@ -115,7 +115,7 @@ def calculate_MID_Average():
     )
 
     spring_average = (
-        sum(spring_grades) / len(spring_grades) * 0.025
+        sum(spring_grades) / len(spring_grades) * 0.25
         if spring_grades else 0
     )
 
@@ -163,5 +163,3 @@ def calculate_final_grade():
     )
 
     return round(final_grade, 2)
-
-
