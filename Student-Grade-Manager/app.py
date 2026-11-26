@@ -330,4 +330,4 @@ if st.session_state.grades:
 else:
     st.info("Henüz sınav notu eklenmedi.")
 
-        st.caption("Gerekli not: 64.5")
+    st.caption("Gerekli not: 64.5")
