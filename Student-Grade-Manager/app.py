@@ -22,7 +22,6 @@ KISA = {
     "Speaking Assessment": "SA",
     "Midterm": "MT",
     "Speaking Examination": "SE",
-
 }
 
 st.markdown(
@@ -149,7 +148,9 @@ if st.button("Notu Ekle"):
 
 for i, g in enumerate(st.session_state.grades):
     sol, sag = st.columns([4, 1])
-    sol.write(f"{KISA[g['Exam Type']]}{g['Exam No']} | {g['semester']} | {g['Grade']:g}")
+    sol.write(
+        f"{KISA[g['Exam Type']]}{g['Exam No']} | {g['semester']} | {g['Grade']:g}"
+    )
     if sag.button("Sil", key=f"sil_{i}"):
         delete_grade(g["Exam Type"], g["Exam No"], g["semester"])
         st.session_state.grades = list(add_exams.grades)
