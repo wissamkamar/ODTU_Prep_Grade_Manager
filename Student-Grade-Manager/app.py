@@ -16,6 +16,15 @@ st.set_page_config(
 
 MAROON, GOLD, TINT, LINE = "#86143a", "#f0c35a", "#fde8ec", "#e6c3cc"
 
+KISA = {
+    "Quiz": "QZ",
+    "Writing": "WA",
+    "Speaking Assessment": "SA",
+    "Midterm": "MT",
+    "Speaking Examination": "SE",
+
+}
+
 st.markdown(
     f"""
 <style>
@@ -39,6 +48,8 @@ div.stButton > button:hover {{ background:#6a0f2e; color:#fff; }}
 """,
     unsafe_allow_html=True,
 )
+
+genel = st.container()
 
 # Her dönemin kur seçimi ve devamsızlığı ayrı tutulur (dönem sonunda sıfırlanır).
 if "data" not in st.session_state:
@@ -70,23 +81,6 @@ data[term]["level"] = level
 
 # ---- Özet kartı ----
 s = status(level, term, data[term]["used"])
-color = "#c0172f" if s.exceeded else MAROON
-deg = s.remaining_percent * 3.6
-msg = (
-    f'<p class="bad">{term} dönemi limiti {s.over_by} saat aşıldı. EPE\'ye giremezsin ve sınıfta kalırsın.</p>'
-    if s.exceeded
-    else f'<p class="ok">{s.remaining} saat devamsızlık hakkın kaldı.</p>'
-)
-st.markdown(
-    f"""
-<div class="card"><h3>Devamsızlık Oranı</h3>
-<div class="ring-row">
-  <div class="ring" style="background:conic-gradient({color} {deg}deg, #f1c4cd 0)"></div>
-  <div><div class="pct">%{s.remaining_percent}</div><div class="sub">({s.used} / {s.total} saat)</div></div>
-</div>{msg}</div>
-""",
-    unsafe_allow_html=True,
-)
 
 # İki dönemden herhangi birinde limit aşıldıysa genel uyarı
 lost = failed_terms({t: (data[t]["level"], data[t]["used"]) for t in TERMS})
@@ -128,7 +122,7 @@ add_exams.grades[:] = st.session_state.grades
 semester = st.radio("Not Dönemi", ["Fall", "Spring"], horizontal=True)
 exam_type = st.selectbox(
     "Sınav",
-    ["Quiz", "Writing", "Speaking Assesment", "Midterm", "Speaking Examination"],
+    ["Quiz", "Writing", "Speaking Assessment", "Midterm", "Speaking Examination"],
 )
 exam_no = st.text_input("Sınav no (örn. 01)", value="01")
 grade = st.number_input("Not", min_value=0.0, max_value=100.0)
@@ -155,16 +149,38 @@ if st.button("Notu Ekle"):
 
 for i, g in enumerate(st.session_state.grades):
     sol, sag = st.columns([4, 1])
-    sol.write(f"{g['Exam']} | {g['semester']} | {g['Grade']:g}")
+    sol.write(f"{KISA[g['Exam Type']]}{g['Exam No']} | {g['semester']} | {g['Grade']:g}")
     if sag.button("Sil", key=f"sil_{i}"):
         delete_grade(g["Exam Type"], g["Exam No"], g["semester"])
         st.session_state.grades = list(add_exams.grades)
         st.rerun()
 
 final = calculate_final_grade()
-st.write("Ortalama:", final)
 
-if final >= 64.5:
-    st.success("EPE'ye Hak Kazandın")
+if s.exceeded:
+    delta = f"-{s.over_by} saat aşıldı"
 else:
-    st.error("EPE'ye Giremezsin")
+    delta = f"{s.remaining} saat kaldı"
+
+with genel:
+    st.subheader("Genel Durum")
+    k1, k2, k3 = st.columns(3)
+
+    with k1.container(border=True):
+        st.caption("Devamsızlık Hakkı")
+        st.metric("Kalan hak", f"{s.remaining} saat")
+        st.caption(f"{s.used} / {s.total} saat kullanıldı")
+        if s.exceeded:
+            st.error(f"{s.over_by} saat aşıldı")
+
+    with k2.container(border=True):
+        st.caption("Not Ortalaması")
+        st.metric("Genel ortalama", final)
+
+    with k3.container(border=True):
+        st.caption("EPE Durumu")
+        if final >= 64.5:
+            st.success("Hak Kazandın")
+        else:
+            st.error("Hak Kazanmadın")
+        st.caption("Gerekli not: 64.5")
